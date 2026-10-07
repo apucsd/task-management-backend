@@ -1,0 +1,34 @@
+model User {
+  id         String     @id @default(uuid())
+  name       String
+  email      String     @unique
+  password   String?
+  image      String?   @default("https://cdn-icons-png.flaticon.com/512/3135/3135715.png")
+  status     UserStatus @default(ACTIVE)
+  isVerified Boolean    @default(false)
+
+
+  // OTP AND VERIFICATION
+  otp        Int?
+  otpExpiry  DateTime?
+  otpType    OtpType?
+
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@map("users")
+}
+
+enum OtpType {
+  REGISTRATION
+  PASSWORD_RESET
+  EMAIL_CHANGE
+}
+
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+  DELETED
+}

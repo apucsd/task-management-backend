@@ -1,0 +1,14 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ActiveStatus {
+  ACTIVE
+  DELETED
+}
