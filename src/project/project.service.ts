@@ -13,24 +13,17 @@ export class ProjectService {
     constructor(private prisma: PrismaService) {}
 
     async createProject(userId: string, dto: CreateProjectDto) {
-        return this.prisma.$transaction(async (tx) => {
-            const project = await tx.project.create({
-                data: {
-                    name: dto.name,
-                    description: dto.description,
-                    ownerId: userId,
+        return this.prisma.project.create({
+            data: {
+                name: dto.name,
+                description: dto.description,
+                ownerId: userId,
+                members: {
+                    create: {
+                        userId,
+                    },
                 },
-            });
-
-            // ADD OWNER TO MEMBERS
-            await tx.projectMember.create({
-                data: {
-                    projectId: project.id,
-                    userId,
-                },
-            });
-
-            return project;
+            },
         });
     }
 
@@ -136,7 +129,6 @@ export class ProjectService {
                                 image: true,
                             },
                         },
-                        createdAt: true,
                     },
                 },
             },
