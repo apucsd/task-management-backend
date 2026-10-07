@@ -13,6 +13,10 @@ model User {
   otpExpiry  DateTime?
   otpType    OtpType?
 
+  // PROJECT RELATIONS
+  ownedProjects       Project[]       @relation("ProjectOwner")
+  projectMemberships  ProjectMember[] @relation("ProjectMemberUser")
+
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 
