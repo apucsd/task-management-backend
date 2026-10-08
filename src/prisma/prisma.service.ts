@@ -1,4 +1,5 @@
 import dns from 'node:dns';
+import net from 'node:net';
 import {
     Injectable,
     OnModuleInit,
@@ -9,7 +10,8 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from 'generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
-// PREFER IPV4 OVER IPV6 FOR POSTGRES POOLING
+// DISABLE AUTO-SELECT FAMILY AND PREFER IPV4 TO PREVENT CROSS-REGION TIMEOUTS
+net.setDefaultAutoSelectFamily(false);
 dns.setDefaultResultOrder('ipv4first');
 
 @Injectable()

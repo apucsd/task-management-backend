@@ -1,4 +1,5 @@
 import dns from 'node:dns';
+import net from 'node:net';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
@@ -9,7 +10,8 @@ import cookieParser from 'cookie-parser';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-// RESOLVE IPV4 FIRST TO AVOID CLOUD DATABASE TIMEOUTS ON LINUX
+// DISABLE AUTO-SELECT FAMILY AND PREFER IPV4 TO PREVENT CROSS-REGION TIMEOUTS
+net.setDefaultAutoSelectFamily(false);
 dns.setDefaultResultOrder('ipv4first');
 
 async function bootstrap() {
