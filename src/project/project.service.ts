@@ -8,9 +8,42 @@ import { UserStatus } from 'generated/prisma/enums';
 import { AppError } from 'src/common/errors/app-error';
 import QueryBuilder from 'src/common/utils/query-builder';
 
+const USER_PUBLIC_SELECT = {
+    id: true,
+    name: true,
+    email: true,
+    image: true,
+} as const;
+
 @Injectable()
 export class ProjectService {
     constructor(private prisma: PrismaService) {}
+
+    // ---------- PRIVATE HELPERS ----------
+
+    private async findProjectOrThrow(id: string) {
+        const project = await this.prisma.project.findUnique({
+            where: { id },
+        });
+
+        if (!project) {
+            throw new AppError(HttpStatus.NOT_FOUND, 'Project not found');
+        }
+
+        return project;
+    }
+
+    private assertOwner(
+        project: { ownerId: string },
+        userId: string,
+        message: string,
+    ) {
+        if (project.ownerId !== userId) {
+            throw new AppError(HttpStatus.FORBIDDEN, message);
+        }
+    }
+
+    // ---------- PUBLIC METHODS ----------
 
     async createProject(userId: string, dto: CreateProjectDto) {
         return this.prisma.project.create({
@@ -18,6 +51,8 @@ export class ProjectService {
                 name: dto.name,
                 description: dto.description,
                 ownerId: userId,
+                // Owner is also stored as a member so membership queries
+                // cover every user who has access to the project.
                 members: {
                     create: {
                         userId,
@@ -33,6 +68,7 @@ export class ProjectService {
         if (query.type === 'owned') {
             whereClause.ownerId = userId;
         } else if (query.type === 'member') {
+            // Member of the project but not the owner
             whereClause.members = { some: { userId } };
             whereClause.ownerId = { not: userId };
         } else {
@@ -64,24 +100,14 @@ export class ProjectService {
                 createdAt: true,
                 updatedAt: true,
                 owner: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        image: true,
-                    },
+                    select: USER_PUBLIC_SELECT,
                 },
                 members: {
                     select: {
                         id: true,
                         userId: true,
                         user: {
-                            select: {
-                                id: true,
-                                name: true,
-                                email: true,
-                                image: true,
-                            },
+                            select: USER_PUBLIC_SELECT,
                         },
                         createdAt: true,
                     },
@@ -110,24 +136,14 @@ export class ProjectService {
             where: { id },
             include: {
                 owner: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        image: true,
-                    },
+                    select: USER_PUBLIC_SELECT,
                 },
                 members: {
                     select: {
                         id: true,
                         userId: true,
                         user: {
-                            select: {
-                                id: true,
-                                name: true,
-                                email: true,
-                                image: true,
-                            },
+                            select: USER_PUBLIC_SELECT,
                         },
                     },
                 },
@@ -156,25 +172,17 @@ export class ProjectService {
     }
 
     async updateProject(id: string, userId: string, dto: UpdateProjectDto) {
-        const project = await this.prisma.project.findUnique({
-            where: { id },
-        });
+        const project = await this.findProjectOrThrow(id);
+        this.assertOwner(
+            project,
+            userId,
+            'Only project owner can update project',
+        );
 
-        if (!project) {
-            throw new AppError(HttpStatus.NOT_FOUND, 'Project not found');
-        }
-
-        if (project.ownerId !== userId) {
-            throw new AppError(
-                HttpStatus.FORBIDDEN,
-                'Only project owner can update project',
-            );
-        }
-
-        return await this.prisma.project.update({
+        return this.prisma.project.update({
             where: { id },
             data: {
-                ...(dto.name && { name: dto.name }),
+                ...(dto.name !== undefined && { name: dto.name }),
                 ...(dto.description !== undefined && {
                     description: dto.description,
                 }),
@@ -183,22 +191,14 @@ export class ProjectService {
     }
 
     async deleteProject(id: string, userId: string) {
-        const project = await this.prisma.project.findUnique({
-            where: { id },
-        });
+        const project = await this.findProjectOrThrow(id);
+        this.assertOwner(
+            project,
+            userId,
+            'Only project owner can delete project',
+        );
 
-        if (!project) {
-            throw new AppError(HttpStatus.NOT_FOUND, 'Project not found');
-        }
-
-        if (project.ownerId !== userId) {
-            throw new AppError(
-                HttpStatus.FORBIDDEN,
-                'Only project owner can delete project',
-            );
-        }
-
-        return await this.prisma.project.delete({
+        return this.prisma.project.delete({
             where: { id },
         });
     }
@@ -208,24 +208,16 @@ export class ProjectService {
         currentUserId: string,
         dto: AddMemberDto,
     ) {
-        const project = await this.prisma.project.findUnique({
-            where: { id: projectId },
-            include: { members: true },
-        });
-
-        if (!project) {
-            throw new AppError(HttpStatus.NOT_FOUND, 'Project not found');
-        }
-
-        if (project.ownerId !== currentUserId) {
-            throw new AppError(
-                HttpStatus.FORBIDDEN,
-                'Only project owner can add members',
-            );
-        }
+        const project = await this.findProjectOrThrow(projectId);
+        this.assertOwner(
+            project,
+            currentUserId,
+            'Only project owner can add members',
+        );
 
         const userToAdd = await this.prisma.user.findFirst({
             where: { id: dto.userId, status: UserStatus.ACTIVE },
+            select: { id: true },
         });
 
         if (!userToAdd) {
@@ -242,32 +234,36 @@ export class ProjectService {
             );
         }
 
-        const isAlreadyMember = project.members.some(
-            (m) => m.userId === userToAdd.id,
-        );
-        if (isAlreadyMember) {
-            throw new AppError(
-                HttpStatus.CONFLICT,
-                'User is already a member of this project',
-            );
+        // Targeted lookup instead of loading every member
+        const existingMember = await this.prisma.projectMember.findFirst({
+            where: { projectId, userId: userToAdd.id },
+            select: { id: true },
+        });
+
+        if (existingMember) {
+            throw this.alreadyMemberError();
         }
 
-        return await this.prisma.projectMember.create({
-            data: {
-                projectId,
-                userId: userToAdd.id,
-            },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        image: true,
+        try {
+            return await this.prisma.projectMember.create({
+                data: {
+                    projectId,
+                    userId: userToAdd.id,
+                },
+                include: {
+                    user: {
+                        select: USER_PUBLIC_SELECT,
                     },
                 },
-            },
-        });
+            });
+        } catch (error: any) {
+            // P2002 = unique constraint violation (concurrent request won the race).
+            // Requires @@unique([projectId, userId]) on ProjectMember in schema.prisma.
+            if (error?.code === 'P2002') {
+                throw this.alreadyMemberError();
+            }
+            throw error;
+        }
     }
 
     async removeMember(
@@ -275,19 +271,15 @@ export class ProjectService {
         memberIdOrUserId: string,
         currentUserId: string,
     ) {
-        const project = await this.prisma.project.findUnique({
-            where: { id: projectId },
-            include: { members: true },
+        const project = await this.findProjectOrThrow(projectId);
+
+        // FIND MEMBER RECORD (targeted query)
+        const memberRecord = await this.prisma.projectMember.findFirst({
+            where: {
+                projectId,
+                OR: [{ id: memberIdOrUserId }, { userId: memberIdOrUserId }],
+            },
         });
-
-        if (!project) {
-            throw new AppError(HttpStatus.NOT_FOUND, 'Project not found');
-        }
-
-        // FIND MEMBER RECORD
-        const memberRecord = project.members.find(
-            (m) => m.id === memberIdOrUserId || m.userId === memberIdOrUserId,
-        );
 
         if (!memberRecord) {
             throw new AppError(
@@ -314,8 +306,15 @@ export class ProjectService {
             );
         }
 
-        return await this.prisma.projectMember.delete({
+        return this.prisma.projectMember.delete({
             where: { id: memberRecord.id },
         });
+    }
+
+    private alreadyMemberError() {
+        return new AppError(
+            HttpStatus.CONFLICT,
+            'User is already a member of this project',
+        );
     }
 }
