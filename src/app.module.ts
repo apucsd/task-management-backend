@@ -12,6 +12,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { throttlerAsyncConfig } from './config/throttler.config';
 import { TaskModule } from './task/task.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
     imports: [
@@ -29,6 +30,7 @@ import { TaskModule } from './task/task.module';
         MailModule,
         ProjectModule,
         TaskModule,
+        DashboardModule,
     ],
     controllers: [AppController],
     providers: [

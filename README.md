@@ -77,9 +77,19 @@ yarn generate
 # Run database migrations
 yarn migrate
 
-# Seed database with initial Admin user
+# Seed database with realistic sample data
 yarn db:seed
 ```
+
+#### 🔑 Pre-Seeded Test Accounts
+
+All accounts share the default password: `Password123!`
+
+| Email | Name | Role / Context |
+| :--- | :--- | :--- |
+| `john@example.com` | John Doe | Owner of *Website Redesign*, Member of *Mobile App* |
+| `jane@example.com` | Jane Smith | Owner of *Mobile App*, Member of *Website Redesign* |
+| `bob@example.com` | Bob Johnson | Owner of *Internal Analytics*, Member of *Website Redesign* |
 
 ---
 
