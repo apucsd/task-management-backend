@@ -67,7 +67,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
                     break;
                 default:
                     statusCode = HttpStatus.BAD_REQUEST;
-                    message = 'Database operation failed';
+                    message = `Database operation failed (${exception.code}): ${
+                        exception.message
+                            .split('\n')
+                            .filter(
+                                (l: string) =>
+                                    l.trim() && !l.includes('invocation'),
+                            )
+                            .pop() || 'Unknown error'
+                    }`;
                     break;
             }
         }
