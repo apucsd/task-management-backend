@@ -1,3 +1,4 @@
+import dns from 'node:dns';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
@@ -7,6 +8,9 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
+// RESOLVE IPV4 FIRST TO AVOID CLOUD DATABASE TIMEOUTS ON LINUX
+dns.setDefaultResultOrder('ipv4first');
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {

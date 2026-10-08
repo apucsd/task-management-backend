@@ -1,3 +1,4 @@
+import dns from 'node:dns';
 import {
     Injectable,
     OnModuleInit,
@@ -7,6 +8,9 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from 'generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+
+// PREFER IPV4 OVER IPV6 FOR POSTGRES POOLING
+dns.setDefaultResultOrder('ipv4first');
 
 @Injectable()
 export class PrismaService
