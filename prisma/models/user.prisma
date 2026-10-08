@@ -16,6 +16,8 @@ model User {
   // PROJECT RELATIONS
   ownedProjects       Project[]       @relation("ProjectOwner")
   projectMemberships  ProjectMember[] @relation("ProjectMemberUser")
+  assignedTasks       Task[]          @relation("TaskAssignee")
+
 
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt

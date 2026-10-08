@@ -11,6 +11,7 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { throttlerAsyncConfig } from './config/throttler.config';
+import { TaskModule } from './task/task.module';
 
 @Module({
     imports: [
@@ -27,6 +28,7 @@ import { throttlerAsyncConfig } from './config/throttler.config';
         AuthModule,
         MailModule,
         ProjectModule,
+        TaskModule,
     ],
     controllers: [AppController],
     providers: [
