@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 import { TaskPriority, TaskStatus } from 'generated/prisma/enums';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
