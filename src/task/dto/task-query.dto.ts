@@ -35,4 +35,12 @@ export class TaskQueryDto extends PaginationQueryDto {
     @IsOptional()
     @IsUUID()
     assigneeId?: string;
+
+    @ApiPropertyOptional({
+        description: 'Sort expression (e.g. -createdAt or dueDate)',
+        example: '-createdAt',
+    })
+    @IsOptional()
+    @IsString()
+    sort?: string;
 }
