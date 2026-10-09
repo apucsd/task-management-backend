@@ -18,11 +18,21 @@ A production-grade, scalable RESTful API built with **NestJS**, **PostgreSQL**, 
 
 ---
 
-## 🔑 Pre-Seeded Evaluation Accounts
+## 🔑 Evaluation & Test Accounts
 
-The database comes pre-seeded with realistic projects, cross-user memberships, and tasks for immediate evaluation.
+You can log in directly with the primary demo account to immediately explore active projects, tasks, and metrics:
 
-**Default Password for all accounts:** `Password123!`
+### 🌟 Primary Account (Recommended — Rich Data)
+- **Email:** `apusutradhar77@gmail.com`
+- **Password:** `12345678`
+- **Context:** Primary test account populated with multiple live projects, workspaces, members, and tasks.
+
+---
+
+### 👥 Additional Pre-Seeded Collaboration Accounts
+Use these accounts to test cross-user collaboration, permissions, and IDOR prevention:
+
+**Default Password for below accounts:** `Password123!`
 
 | Email | User Name | Role & Evaluation Context |
 | :--- | :--- | :--- |
