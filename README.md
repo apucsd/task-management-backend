@@ -1,75 +1,125 @@
-# Project & Task Management API
+# Project & Task Management System — Backend API
 
-A scalable, production-ready RESTful API backend built with **NestJS**, **PostgreSQL**, and **Prisma ORM**.
-
----
-
-## ⚡ Features & Architecture
-
-- **🔐 Authentication & Security**
-  - JWT Authentication (Access & Refresh tokens with HTTP-only cookies)
-  - Email OTP Verification for registration & password reset
-  - Rate limiting & brute-force protection (`@nestjs/throttler`)
-  - Password hashing with Bcrypt
-
-- **🗄️ Database & ORM**
-  - PostgreSQL database with Prisma ORM
-  - Modular schema organization (`prisma/models/`)
-  - Database seeding for initial setup
-
-- **📧 Email Services**
-  - Transactional email service using Nodemailer & Handlebars
-  - Email OTP delivery for verification and password reset
-
-- **🌐 API Standards & Quality**
-  - Global response transformation envelope (`{ success, message, data, meta, timestamp }`)
-  - Global exception filter with structured error logging
-  - Generic QueryBuilder for flexible search, filtering, sorting, and pagination
-  - Interactive Swagger / OpenAPI documentation (`/api/docs`)
+A production-grade, scalable RESTful API built with **NestJS**, **PostgreSQL**, and **Prisma ORM** for the Mid-Level Assessment.
 
 ---
 
-## 🛠️ Tech Stack
+## 🌐 Live Deployments
 
-- **Framework:** NestJS
-- **Language:** TypeScript
-- **Database:** PostgreSQL
-- **ORM:** Prisma
-- **Auth:** JWT, Passport
-- **Rate Limiting:** `@nestjs/throttler` (In-Memory)
-- **Email:** `@nestjs-modules/mailer`, Nodemailer, Handlebars
+| Component | Platform / Host | Live URL |
+| :--- | :--- | :--- |
+| **Frontend Application** | Vercel | [https://todo-task-frontend-three.vercel.app](https://todo-task-frontend-three.vercel.app/) |
+| **Backend REST API** | Azure VM (Ubuntu 22.04 LTS) | [https://zmc-taskflow.centralindia.cloudapp.azure.com](https://zmc-taskflow.centralindia.cloudapp.azure.com) |
+| **Interactive Swagger Docs** | Azure VM | [https://zmc-taskflow.centralindia.cloudapp.azure.com/api/docs](https://zmc-taskflow.centralindia.cloudapp.azure.com/api/docs) |
+| **Base API Endpoint** | Azure VM | `https://zmc-taskflow.centralindia.cloudapp.azure.com/api/v1` |
+
+> [!NOTE]
+> **Cloud Infrastructure Note**: The backend is hosted on a self-managed **Azure Linux Virtual Machine (Student Plan)** running Ubuntu 22.04 LTS, configured with an **Nginx** reverse proxy, SSL termination, and **PM2** process management for 24/7 high availability with zero serverless cold starts.
+
+---
+
+## 🔑 Pre-Seeded Evaluation Accounts
+
+The database comes pre-seeded with realistic projects, cross-user memberships, and tasks for immediate evaluation.
+
+**Default Password for all accounts:** `Password123!`
+
+| Email | User Name | Role & Evaluation Context |
+| :--- | :--- | :--- |
+| `john@example.com` | John Doe | **Owner** of *Website Redesign*, Member of *Mobile App* |
+| `jane@example.com` | Jane Smith | **Owner** of *Mobile App*, Member of *Website Redesign* |
+| `bob@example.com` | Bob Johnson | **Owner** of *Internal Analytics*, Member of *Website Redesign* |
+
+---
+
+## ⚡ Architecture & Business Highlights
+
+### 1. 🛡️ Strict Authorization & IDOR Prevention
+- **URL Tampering Protection**: Access to projects and tasks is strictly scoped to verified memberships. Non-members attempting to view, edit, or delete entities by guessing or changing UUIDs in the URL are immediately rejected with **`403 Forbidden`**.
+- **Owner vs. Member Permissions**: Only project owners can edit project details, delete projects, or remove members. Regular members are restricted to task collaboration.
+- **Assignment Validation**: Tasks can only be assigned to registered users who are confirmed members of that specific project.
+
+### 2. 🔍 Advanced QueryBuilder
+- Full support for search, filtering, sorting, and pagination across tasks and projects:
+  - **Search**: Case-insensitive text search across `title` and `description`.
+  - **Filtering**: Multi-parameter filters for `status`, `priority`, `assigneeId`, and `projectId`.
+  - **Sorting**: Flexible sorting parameters (e.g., `-createdAt`, `dueDate`, `priority`).
+  - **Pagination**: Structured pagination metadata returning `{ total, page, limit, totalPages }`.
+
+### 3. 📊 Dashboard Overview Metrics
+- High-performance overview endpoint (`GET /api/v1/dashboard/overview`) delivering aggregated metrics in a single query:
+  - **Projects**: Total accessible projects, active projects (with pending tasks).
+  - **Tasks**: Total tasks, completed, in-progress, todo, and high-priority items.
+
+### 4. 🗄️ Relational Database & ORM Design
+- PostgreSQL database hosted on Neon connected via Prisma ORM using `@prisma/adapter-pg`.
+- Explicit `ProjectMember` junction model with `@@unique([projectId, userId])` and cascade deletion rules to maintain referential integrity.
+- Migration history tracked in `prisma/migrations` with 0 drift.
+
+### 5. 🌐 Production-Ready Standards
+- **Global Response Envelope**: All API endpoints return a standardized format:
+  `{ success: boolean, message: string, data: T, meta?: PaginationMeta, timestamp: string }`
+- **Global Exception Filter**: Catches NestJS exceptions and Prisma database errors, providing structured JSON responses and error logging.
+- **Resilient Email Delivery**: Fire-and-forget asynchronous OTP email delivery with console fallback to prevent SMTP latency from blocking HTTP requests.
+- **Cross-Region Network Optimization**: Enforces IPv4 resolution (`net.setDefaultAutoSelectFamily(false)`) to prevent cross-continental TCP timeouts.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Backend Framework:** NestJS 11
+- **Language:** TypeScript 5
+- **Database:** PostgreSQL (Neon Serverless)
+- **ORM:** Prisma 7 (`@prisma/adapter-pg`)
+- **Authentication:** JWT, Passport, Bcrypt password hashing
+- **Security & Rate Limiting:** `@nestjs/throttler`, CORS whitelist, HTTP-only cookie support
+- **Email Service:** Nodemailer, Handlebars
 - **Validation:** `class-validator`, `class-transformer`
-- **Documentation:** Swagger UI
+- **API Documentation:** Swagger / OpenAPI UI
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Local Development Setup
 
 ### 1. Prerequisites
+- **Node.js**: `v20.x` or higher
+- **Package Manager**: `yarn`
+- **PostgreSQL**: Local instance or Cloud URI (Neon, Supabase)
 
-- **Node.js**: `v18.x` or higher
-- **Package Manager**: `yarn` or `npm`
-- **PostgreSQL**: Running instance (Local or Cloud like Supabase / Neon)
-
-
----
-
-### 2. Installation & Environment
-
+### 2. Installation
 ```bash
+# Clone the repository
+git clone https://github.com/apucsd/task-management-backend.git
+cd task-management-backend
+
 # Install dependencies
 yarn install
-
-# Copy environment variables
-cp .env.example .env
 ```
 
-Ensure your `.env` contains valid database and credentials.
+### 3. Environment Configuration
+Create a `.env` file in the root directory:
+```env
+NODE_ENV=development
+PORT=4000
+CLIENT_URL=http://localhost:3000
 
----
+# DATABASE
+DATABASE_URL="postgresql://user:password@localhost:5432/task_management?schema=public"
 
-### 3. Database Migration & Seeding
+# AUTHENTICATION
+JWT_SECRET="your-super-secret-jwt-key"
+BCRYPT_SALT_ROUNDS=10
+JWT_ACCESS_TOKEN_EXPIRES_IN="7d"
+JWT_REFRESH_TOKEN_EXPIRES_IN="30d"
 
+# SMTP EMAIL (Optional - OTP is also printed in server logs)
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT=587
+SMTP_USER="your-email@gmail.com"
+SMTP_PASS="your-app-password"
+```
+
+### 4. Database Migrations & Seeding
 ```bash
 # Generate Prisma Client
 yarn generate
@@ -77,54 +127,45 @@ yarn generate
 # Run database migrations
 yarn migrate
 
-# Seed database with realistic sample data
+# Seed database with sample test accounts, projects, and tasks
 yarn db:seed
 ```
 
-#### 🔑 Pre-Seeded Test Accounts
-
-All accounts share the default password: `Password123!`
-
-| Email | Name | Role / Context |
-| :--- | :--- | :--- |
-| `john@example.com` | John Doe | Owner of *Website Redesign*, Member of *Mobile App* |
-| `jane@example.com` | Jane Smith | Owner of *Mobile App*, Member of *Website Redesign* |
-| `bob@example.com` | Bob Johnson | Owner of *Internal Analytics*, Member of *Website Redesign* |
-
----
-
-### 4. Running the Application
-
+### 5. Running the Application
 ```bash
-# Development mode
+# Start in development mode (with hot-reload)
 yarn dev
 
-# Production build
+# Compile production bundle
 yarn build
 
-# Run production
+# Start production server
 yarn start:prod
 ```
 
 ---
 
-## 📖 API Documentation
+## 🧪 Testing & Code Quality
 
-Once the server is running:
-- **Swagger Documentation:** `http://localhost:4000/api/docs`
-- **Base API Path:** `http://localhost:4000/api/v1`
+```bash
+# Run ESLint validation
+yarn lint
+
+# Run Unit tests
+yarn test
+
+# Run E2E tests
+yarn test:e2e
+```
 
 ---
 
-## 🧪 Testing
+## 📖 API Documentation Endpoints
 
-```bash
-# Unit tests
-yarn test
+When running locally:
+- **Interactive Swagger UI:** `http://localhost:4000/api/docs`
+- **Base API Path:** `http://localhost:4000/api/v1`
 
-# E2E tests
-yarn test:e2e
-
-# Linting
-yarn lint
-```
+When testing the live Azure server:
+- **Interactive Swagger UI:** `https://zmc-taskflow.centralindia.cloudapp.azure.com/api/docs`
+- **Base API Path:** `https://zmc-taskflow.centralindia.cloudapp.azure.com/api/v1`
