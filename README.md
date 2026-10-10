@@ -66,6 +66,15 @@ Use these accounts to test cross-user collaboration, permissions, and IDOR preve
 - Explicit `ProjectMember` junction model with `@@unique([projectId, userId])` and cascade deletion rules to maintain referential integrity.
 - Migration history tracked in `prisma/migrations` with 0 drift.
 
+#### 📐 Entity Relationship Diagram (ERD)
+- **Interactive Diagram:** [View on Lucidchart](https://lucid.app/lucidchart/dacf8163-6912-4131-b077-6915285da554/view)
+
+<p align="center">
+  <a href="https://lucid.app/lucidchart/dacf8163-6912-4131-b077-6915285da554/view" target="_blank">
+    <img src="https://i.ibb.co.com/DDtf1THf/Task-Management-1.png" alt="Database ER Diagram" width="850" />
+  </a>
+</p>
+
 ### 5. 🌐 Production-Ready Standards
 - **Global Response Envelope**: All API endpoints return a standardized format:
   `{ success: boolean, message: string, data: T, meta?: PaginationMeta, timestamp: string }`
