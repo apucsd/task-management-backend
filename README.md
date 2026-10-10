@@ -71,7 +71,7 @@ Use these accounts to test cross-user collaboration, permissions, and IDOR preve
 
 <p align="center">
   <a href="https://lucid.app/lucidchart/dacf8163-6912-4131-b077-6915285da554/view" target="_blank">
-    <img src="https://i.ibb.co.com/DDtf1THf/Task-Management-1.png" alt="Database ER Diagram" width="850" />
+    <img src="https://i.ibb.co.com/7JnFn146/Task-Management-2.png" alt="Database ER Diagram" width="850" />
   </a>
 </p>
 
